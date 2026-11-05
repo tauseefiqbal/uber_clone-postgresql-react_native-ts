@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { getDb } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    const sql = getDb();
 
     const response = await sql`
       INSERT INTO rides ( 

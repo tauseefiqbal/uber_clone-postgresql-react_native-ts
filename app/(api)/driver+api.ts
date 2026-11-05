@@ -1,13 +1,16 @@
-import { neon } from "@neondatabase/serverless";
+import { defaultDrivers } from "@/constants";
+import { getDb } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    const sql = getDb();
     const response = await sql`SELECT * FROM drivers`;
 
-    return Response.json({ data: response });
+    return Response.json({
+      data: response?.length ? response : defaultDrivers,
+    });
   } catch (error) {
     console.error("Error fetching drivers:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return Response.json({ data: defaultDrivers });
   }
 }

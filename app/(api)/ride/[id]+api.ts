@@ -1,11 +1,11 @@
-import { neon } from "@neondatabase/serverless";
+import { getDb } from "@/lib/db";
 
 export async function GET(request: Request, { id }: { id: string }) {
   if (!id)
     return Response.json({ error: "Missing required fields" }, { status: 400 });
 
   try {
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    const sql = getDb();
     const response = await sql`
         SELECT
             rides.ride_id,

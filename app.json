@@ -22,14 +22,14 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+          "apiKey": "AIzaSyAtlM4Z3GloOJ27EH9g2v_AlneBjPtuvWw"
         }
       },
       "package": "com.tauseefiqbal.uber"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [

@@ -136,6 +136,28 @@ export const getRouteCoordinates = async ({
   }
 };
 
+const estimateDurationSeconds = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceKm = R * c;
+  // Assume ~40 km/h average city speed, minimum 180 seconds (3 min)
+  return Math.max(Math.round((distanceKm / 40) * 3600), 180);
+};
+
 const getRouteDurationSeconds = async ({
   originLatitude,
   originLongitude,
@@ -157,11 +179,20 @@ const getRouteDurationSeconds = async ({
     });
 
     const durationValue = route?.duration ?? "0s";
-    return Number.parseFloat(durationValue.replace(/s$/, "")) || 0;
+    const parsed = Number.parseFloat(durationValue.replace(/s$/, "")) || 0;
+    if (parsed > 0) {
+      return parsed;
+    }
   } catch (error) {
     console.warn("Error fetching route duration from Routes API:", error);
-    return 0;
   }
+
+  return estimateDurationSeconds(
+    originLatitude,
+    originLongitude,
+    destinationLatitude,
+    destinationLongitude,
+  );
 };
 
 export const generateMarkersFromData = ({
@@ -173,14 +204,18 @@ export const generateMarkersFromData = ({
   userLatitude: number;
   userLongitude: number;
 }): MarkerData[] => {
-  return data.map((driver) => {
+  return data.map((driver, index) => {
     const latOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
     const lngOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
+    const defaultTime = 8 + index * 2;
+    const defaultPrice = (defaultTime * 0.5).toFixed(2);
 
     return {
       latitude: userLatitude + latOffset,
       longitude: userLongitude + lngOffset,
       title: `${driver.first_name} ${driver.last_name}`,
+      time: defaultTime,
+      price: defaultPrice,
       ...driver,
     };
   });

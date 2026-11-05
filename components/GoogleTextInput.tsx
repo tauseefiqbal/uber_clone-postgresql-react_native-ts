@@ -149,6 +149,20 @@ const GoogleTextInput = ({
     });
   };
 
+  const handleSubmitEditing = async () => {
+    if (suggestions.length > 0) {
+      await handleSuggestionPress(suggestions[0]);
+      return;
+    }
+    const trimmed = value.trim();
+    if (trimmed.length >= 2) {
+      const results = await getPlaceSuggestions(trimmed);
+      if (results.length > 0) {
+        await handleSuggestionPress(results[0]);
+      }
+    }
+  };
+
   return (
     <View className={`relative z-50 rounded-xl ${containerStyle}`}>
       <View className="flex-row items-center justify-center rounded-xl">
@@ -163,6 +177,7 @@ const GoogleTextInput = ({
         <TextInput
           value={value}
           onChangeText={handleChangeText}
+          onSubmitEditing={handleSubmitEditing}
           placeholder={initialLocation ?? "Where do you want to go?"}
           placeholderTextColor="gray"
           autoCapitalize="none"

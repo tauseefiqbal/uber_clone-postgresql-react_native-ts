@@ -1,12 +1,38 @@
-import { Image, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import { icons } from "@/constants";
 import { formatDate, formatTime } from "@/lib/utils";
+import { useLocationStore } from "@/store";
 import { Ride } from "@/types/type";
 
 const RideCard = ({ ride }: { ride: Ride }) => {
+  const { setUserLocation, setDestinationLocation } = useLocationStore();
+
+  const handleRidePress = () => {
+    if (ride.origin_latitude && ride.origin_longitude) {
+      setUserLocation({
+        latitude: Number(ride.origin_latitude),
+        longitude: Number(ride.origin_longitude),
+        address: ride.origin_address,
+      });
+    }
+    if (ride.destination_latitude && ride.destination_longitude) {
+      setDestinationLocation({
+        latitude: Number(ride.destination_latitude),
+        longitude: Number(ride.destination_longitude),
+        address: ride.destination_address,
+      });
+      router.push("/(root)/find-ride");
+    }
+  };
+
   return (
-    <View className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3">
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={handleRidePress}
+      className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3"
+    >
       <View className="flex flex-col items-start justify-center p-3">
         <View className="flex flex-row items-center justify-between">
           <Image
@@ -72,8 +98,30 @@ const RideCard = ({ ride }: { ride: Ride }) => {
             </Text>
           </View>
         </View>
+
+        <TouchableOpacity
+          onPress={handleRidePress}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: "#0286FF",
+            borderRadius: 9999,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            marginTop: 12,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}
+            className="text-white font-JakartaBold text-sm"
+          >
+            Select Ride
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

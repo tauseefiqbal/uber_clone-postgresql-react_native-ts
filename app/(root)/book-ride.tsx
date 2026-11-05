@@ -1,9 +1,9 @@
 import { useUser } from "@clerk/clerk-expo";
-import { StripeProvider } from "@stripe/stripe-react-native";
 import { Image, Text, View } from "react-native";
 
 import Payment from "@/components/Payment";
 import RideLayout from "@/components/RideLayout";
+import StripeWrapper from "@/components/StripeWrapper";
 import { icons } from "@/constants";
 import { formatTime } from "@/lib/utils";
 import { useDriverStore, useLocationStore } from "@/store";
@@ -18,11 +18,7 @@ const BookRide = () => {
   )[0];
 
   return (
-    <StripeProvider
-      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
-      merchantIdentifier="merchant.com.uber"
-      urlScheme="myapp"
-    >
+    <StripeWrapper>
       <RideLayout title="Book Ride">
         <>
           <Text className="text-xl font-JakartaSemiBold mb-3">
@@ -101,7 +97,7 @@ const BookRide = () => {
           />
         </>
       </RideLayout>
-    </StripeProvider>
+    </StripeWrapper>
   );
 };
 

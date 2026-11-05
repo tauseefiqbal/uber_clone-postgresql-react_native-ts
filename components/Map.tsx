@@ -16,7 +16,7 @@ import MapView, {
   PROVIDER_GOOGLE,
 } from "react-native-maps";
 
-import { icons } from "@/constants";
+import { defaultDrivers, icons } from "@/constants";
 import { useFetch } from "@/lib/fetch";
 import {
   calculateDriverTimes,
@@ -91,33 +91,39 @@ const Map = () => {
   });
 
   useEffect(() => {
-    if (Array.isArray(drivers)) {
-      if (!userLatitude || !userLongitude) return;
+    const activeDrivers =
+      Array.isArray(drivers) && drivers.length > 0 ? drivers : defaultDrivers;
+    const baseLat = userLatitude ?? 37.78825;
+    const baseLng = userLongitude ?? -122.4324;
 
-      const newMarkers = generateMarkersFromData({
-        data: drivers,
-        userLatitude,
-        userLongitude,
-      });
+    const newMarkers = generateMarkersFromData({
+      data: activeDrivers,
+      userLatitude: baseLat,
+      userLongitude: baseLng,
+    });
 
-      setMarkers(newMarkers);
-    }
+    setMarkers(newMarkers);
+    setDrivers(newMarkers);
   }, [drivers, userLatitude, userLongitude]);
 
   useEffect(() => {
     if (
       markers.length > 0 &&
+      destinationLatitude !== null &&
       destinationLatitude !== undefined &&
+      destinationLongitude !== null &&
       destinationLongitude !== undefined
     ) {
       calculateDriverTimes({
         markers,
-        userLatitude,
-        userLongitude,
+        userLatitude: userLatitude ?? 37.78825,
+        userLongitude: userLongitude ?? -122.4324,
         destinationLatitude,
         destinationLongitude,
       }).then((updatedDrivers) => {
-        setDrivers(updatedDrivers as MarkerData[]);
+        if (Array.isArray(updatedDrivers) && updatedDrivers.length > 0) {
+          setDrivers(updatedDrivers as MarkerData[]);
+        }
       });
     }
   }, [markers, destinationLatitude, destinationLongitude]);

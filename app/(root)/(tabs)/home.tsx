@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import CustomButton from "@/components/CustomButton";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import Map from "@/components/Map";
 import RideCard from "@/components/RideCard";
@@ -165,6 +166,12 @@ const Home = () => {
               icon={icons.search}
               containerStyle="bg-white shadow-md shadow-neutral-300"
               handlePress={handleDestinationPress}
+            />
+
+            <CustomButton
+              title="Select a Ride"
+              onPress={() => router.push("/(root)/find-ride")}
+              className="mt-4"
             />
 
             <>
