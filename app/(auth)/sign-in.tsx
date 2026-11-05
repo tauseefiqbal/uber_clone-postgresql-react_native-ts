@@ -34,8 +34,17 @@ const SignIn = () => {
         Alert.alert("Error", "Log in failed. Please try again.");
       }
     } catch (err: any) {
+      const errorCode = err?.errors?.[0]?.code;
+      const errorMessage = err?.errors?.[0]?.longMessage ?? "";
+      if (
+        errorCode === "session_exists" ||
+        errorMessage.toLowerCase().includes("already signed in")
+      ) {
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", errorMessage || "Sign in failed. Please try again.");
     }
   }, [isLoaded, form]);
 

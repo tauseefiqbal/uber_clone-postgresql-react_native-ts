@@ -28,37 +28,84 @@ const SignUp = () => {
   const onSignUpPress = async () => {
     if (!isLoaded) return;
     try {
-      await signUp.create({
-        emailAddress: form.email,
+      const createdSignUp = await signUp.create({
+        emailAddress: form.email.trim(),
         password: form.password,
       });
+
+      if (createdSignUp.status === "complete") {
+        try {
+          await fetchAPI("/(api)/user", {
+            method: "POST",
+            body: JSON.stringify({
+              name: form.name,
+              email: form.email.trim(),
+              clerkId: createdSignUp.createdUserId,
+            }),
+          });
+        } catch (dbError) {
+          console.warn("User DB creation error:", dbError);
+        }
+
+        await setActive({ session: createdSignUp.createdSessionId });
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
+
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setVerification({
         ...verification,
         state: "pending",
       });
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+      const errorCode = err?.errors?.[0]?.code;
+      const errorMessage = err?.errors?.[0]?.longMessage ?? "";
+      if (
+        errorCode === "session_exists" ||
+        errorMessage.toLowerCase().includes("already signed in")
+      ) {
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
+      if (
+        errorCode === "client_state_invalid" ||
+        errorMessage.toLowerCase().includes("no sign up attempt was found")
+      ) {
+        if (signUp?.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId });
+          router.replace("/(root)/(tabs)/home");
+          return;
+        }
+      }
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert("Error", errorMessage || "Sign up failed. Please try again.");
     }
   };
   const onPressVerify = async () => {
     if (!isLoaded) return;
     try {
+      if (signUp.status === "complete" && signUp.createdSessionId) {
+        await setActive({ session: signUp.createdSessionId });
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
+
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
       if (completeSignUp.status === "complete") {
-        await fetchAPI("/(api)/user", {
-          method: "POST",
-          body: JSON.stringify({
-            name: form.name,
-            email: form.email,
-            clerkId: completeSignUp.createdUserId,
-          }),
-        });
+        try {
+          await fetchAPI("/(api)/user", {
+            method: "POST",
+            body: JSON.stringify({
+              name: form.name,
+              email: form.email.trim(),
+              clerkId: completeSignUp.createdUserId,
+            }),
+          });
+        } catch (dbError) {
+          console.warn("User DB creation error:", dbError);
+        }
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification({
           ...verification,
@@ -72,11 +119,20 @@ const SignUp = () => {
         });
       }
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+      const errorMessage =
+        err?.errors?.[0]?.longMessage ??
+        "Verification failed. Please try again.";
+      if (
+        errorMessage.toLowerCase().includes("no sign up attempt was found") &&
+        signUp?.createdSessionId
+      ) {
+        await setActive({ session: signUp.createdSessionId });
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
       setVerification({
         ...verification,
-        error: err.errors[0].longMessage,
+        error: errorMessage,
         state: "failed",
       });
     }

@@ -1,6 +1,15 @@
-import { Stack } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
+import { Redirect, Stack } from "expo-router";
 
 const Layout = () => {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) return null;
+
+  if (isSignedIn) {
+    return <Redirect href="/(root)/(tabs)/home" />;
+  }
+
   return (
     <Stack>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />

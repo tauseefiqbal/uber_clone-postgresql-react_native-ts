@@ -1,7 +1,10 @@
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
+import * as WebBrowser from "expo-web-browser";
 
 import { fetchAPI } from "@/lib/fetch";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export const tokenCache = {
   async getToken(key: string) {
@@ -38,15 +41,19 @@ export const googleOAuth = async (startOAuthFlow: any) => {
       if (setActive) {
         await setActive({ session: createdSessionId });
 
-        if (signUp.createdUserId) {
-          await fetchAPI("/(api)/user", {
-            method: "POST",
-            body: JSON.stringify({
-              name: `${signUp.firstName} ${signUp.lastName}`,
-              email: signUp.emailAddress,
-              clerkId: signUp.createdUserId,
-            }),
-          });
+        if (signUp?.createdUserId) {
+          try {
+            await fetchAPI("/(api)/user", {
+              method: "POST",
+              body: JSON.stringify({
+                name: `${signUp.firstName ?? ""} ${signUp.lastName ?? ""}`.trim(),
+                email: signUp.emailAddress,
+                clerkId: signUp.createdUserId,
+              }),
+            });
+          } catch (dbErr) {
+            console.warn("User DB creation error:", dbErr);
+          }
         }
 
         return {
@@ -65,8 +72,8 @@ export const googleOAuth = async (startOAuthFlow: any) => {
     console.error(err);
     return {
       success: false,
-      code: err.code,
-      message: err?.errors[0]?.longMessage,
+      code: err?.errors?.[0]?.code ?? err?.code,
+      message: err?.errors?.[0]?.longMessage ?? "An error occurred",
     };
   }
 };

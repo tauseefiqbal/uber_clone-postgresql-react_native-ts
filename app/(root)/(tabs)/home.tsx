@@ -27,8 +27,8 @@ const Home = () => {
 
   const { setUserLocation, setDestinationLocation } = useLocationStore();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     router.replace("/(auth)/sign-in");
   };
 
