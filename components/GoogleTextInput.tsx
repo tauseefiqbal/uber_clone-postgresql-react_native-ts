@@ -24,7 +24,6 @@ const getPlaceSuggestions = async (input: string) => {
       body: JSON.stringify({
         input,
         languageCode: "en",
-        includedPrimaryTypes: ["airport", "restaurant", "geocode", "locality"],
       }),
     },
   );
@@ -62,7 +61,7 @@ const getPlaceDetails = async (placeId: string) => {
   }
 
   const response = await fetch(
-    `https://places.googleapis.com/v1/places/${placeId}?fields=id,displayName,formattedAddress,location`,
+    `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`,
     {
       method: "GET",
       headers: {
@@ -97,12 +96,18 @@ const GoogleTextInput = ({
   const [value, setValue] = useState(initialLocation ?? "");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [shouldSearch, setShouldSearch] = useState(false);
 
   useEffect(() => {
+    setShouldSearch(false);
     setValue(initialLocation ?? "");
   }, [initialLocation]);
 
   useEffect(() => {
+    if (!shouldSearch) {
+      return;
+    }
+
     const trimmedValue = value.trim();
     if (!trimmedValue) {
       setSuggestions([]);
@@ -122,12 +127,18 @@ const GoogleTextInput = ({
     }, 250);
 
     return () => clearTimeout(timeoutId);
-  }, [value]);
+  }, [value, shouldSearch]);
+
+  const handleChangeText = (text: string) => {
+    setShouldSearch(true);
+    setValue(text);
+  };
 
   const handleSuggestionPress = async (suggestion: any) => {
     const details = await getPlaceDetails(suggestion.place_id);
     const selectedAddress = details?.address ?? suggestion.description;
 
+    setShouldSearch(false);
     setValue(selectedAddress);
     setSuggestions([]);
 
@@ -151,7 +162,7 @@ const GoogleTextInput = ({
 
         <TextInput
           value={value}
-          onChangeText={setValue}
+          onChangeText={handleChangeText}
           placeholder={initialLocation ?? "Where do you want to go?"}
           placeholderTextColor="gray"
           autoCapitalize="none"

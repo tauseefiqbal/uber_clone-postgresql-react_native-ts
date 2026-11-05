@@ -42,24 +42,70 @@ const Home = () => {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setHasPermission(false);
-        return;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setHasPermission(false);
+          setUserLocation({
+            latitude: 37.78825,
+            longitude: -122.4324,
+            address: "San Francisco, CA",
+          });
+          return;
+        }
+        setHasPermission(true);
+
+        const lastKnown = await Location.getLastKnownPositionAsync({});
+        const location =
+          lastKnown ??
+          (await Promise.race([
+            Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            }),
+            new Promise<null>((resolve) =>
+              setTimeout(() => resolve(null), 5000),
+            ),
+          ]));
+
+        const latitude = location?.coords?.latitude ?? 37.78825;
+        const longitude = location?.coords?.longitude ?? -122.4324;
+
+        let formattedAddress = location
+          ? "Current Location"
+          : "San Francisco, CA";
+        if (location) {
+          try {
+            const address = await Location.reverseGeocodeAsync({
+              latitude,
+              longitude,
+            });
+            if (address && address.length > 0) {
+              const first = address[0];
+              formattedAddress = [
+                first.name || first.street,
+                first.city || first.region,
+              ]
+                .filter(Boolean)
+                .join(", ");
+            }
+          } catch (geoError) {
+            console.warn("Reverse geocode failed:", geoError);
+          }
+        }
+
+        setUserLocation({
+          latitude,
+          longitude,
+          address: formattedAddress || "Current Location",
+        });
+      } catch (locError) {
+        console.warn("Location fetch failed:", locError);
+        setUserLocation({
+          latitude: 37.78825,
+          longitude: -122.4324,
+          address: "San Francisco, CA",
+        });
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords?.latitude!,
-        longitude: location.coords?.longitude!,
-      });
-
-      setUserLocation({
-        latitude: location.coords?.latitude,
-        longitude: location.coords?.longitude,
-        address: `${address[0].name}, ${address[0].region}`,
-      });
     })();
   }, []);
 
@@ -125,7 +171,10 @@ const Home = () => {
               <Text className="text-xl font-JakartaBold mt-5 mb-3">
                 Your current location
               </Text>
-              <View className="flex flex-row items-center bg-transparent h-[300px]">
+              <View
+                style={{ height: 300, width: "100%" }}
+                className="flex flex-row items-center bg-transparent h-[300px] w-full"
+              >
                 <Map />
               </View>
             </>
