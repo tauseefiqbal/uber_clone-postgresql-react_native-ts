@@ -1,3 +1,4 @@
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
@@ -27,8 +28,11 @@ import { useDriverStore, useLocationStore } from "@/store";
 import { Driver, MarkerData } from "@/types/type";
 
 const geoapifyKey = process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY;
+const isExpoGo =
+  Constants.appOwnership === "expo" ||
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const useAndroidTileFallback =
-  Platform.OS === "android" && Boolean(geoapifyKey);
+  Platform.OS === "android" && isExpoGo && Boolean(geoapifyKey);
 
 const latLngToPixel = (
   lat: number,

@@ -22,13 +22,14 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyAtlM4Z3GloOJ27EH9g2v_AlneBjPtuvWw"
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
         }
-      }
+      },
+      "package": "com.tauseefiqbal.uber"
     },
     "web": {
       "bundler": "metro",
-      "output": "server",
+      "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -41,6 +42,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fa2da426-5543-4ba5-a6d8-4eac39ae5186"
+      }
     }
   }
 }
